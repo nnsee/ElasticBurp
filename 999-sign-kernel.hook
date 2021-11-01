@@ -1,0 +1,11 @@
+[Trigger]
+Operation = Install
+Operation = Upgrade
+Type = Package
+Target = linux
+[Action]
+Description = Creating and signing unified EFI executable...
+Depends = binutils
+Depends = sbsigntools
+When = PostTransaction
+Exec = /usr/bin/create-unified-kernel.sh
