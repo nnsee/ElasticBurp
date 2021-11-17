@@ -1,6 +1,6 @@
 # WASE - Web Audit Search Engine
 # doc_HttpRequestResponse.py: Implementation of the core data structure
-# 
+#
 # Copyright 2016 Thomas Patzke <thomas@patzke.org>
 #
 # This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from elasticsearch_dsl import DocType, Text, Keyword, Integer, Short, Date, Object, Nested, MetaField, analyzer
+from elasticsearch7_dsl import Document, Text, Keyword, Integer, Short, Date, Object, Nested, MetaField, analyzer
 from datetime import datetime
 import re
 from WASEHTMLParser import WASEHTMLParser
@@ -41,7 +41,7 @@ identifierAnalyzer = analyzer("identifier",
         filter = ["lowercase"]
         )
 
-class DocHTTPRequestResponse(DocType):
+class DocHTTPRequestResponse(Document):
     timestamp = Date()
     protocol = Keyword()
     host = Keyword()

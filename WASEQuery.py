@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 
 import argparse
-from elasticsearch import Elasticsearch
-from elasticsearch_dsl import Search, Q, A
-from elasticsearch_dsl.query import Wildcard
+from elasticsearch7 import Elasticsearch
+from elasticsearch7_dsl import Search, Q, A
+from elasticsearch7_dsl.query import Wildcard
 import sys
 
 ### Constants ###

@@ -1,6 +1,6 @@
 from doc_HttpRequestResponse import DocHTTPRequestResponse
-from elasticsearch_dsl.connections import connections
-from elasticsearch_dsl import Index
+from elasticsearch7_dsl.connections import connections
+from elasticsearch7_dsl import Index
 from datetime import datetime
 
 connections.create_connection(hosts=["localhost"])

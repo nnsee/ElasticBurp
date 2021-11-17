@@ -10,8 +10,8 @@ from StringIO import StringIO
 from SocketServer import ForkingMixIn
 from BaseHTTPServer import BaseHTTPRequestHandler
 import re
-from elasticsearch_dsl.connections import connections
-from elasticsearch_dsl import Index
+from elasticsearch7_dsl.connections import connections
+from elasticsearch7_dsl import Index
 
 args = None
 storeResponseBody = True
@@ -56,7 +56,7 @@ class WASEProxyHandler(ProxyHandler):
         self.doc.host = self.hostname
         self.doc.port = int(self.port)
         self.doc.protocol = scheme
-            
+
         return data
 
     def mitm_response(self, data):

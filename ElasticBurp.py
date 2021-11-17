@@ -14,15 +14,35 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from burp import IBurpExtender, IBurpExtenderCallbacks, IHttpListener, IRequestInfo, IParameter, IContextMenuFactory, ITab
-from javax.swing import JMenuItem, ProgressMonitor, JPanel, BoxLayout, JLabel, JTextField, JCheckBox, JButton, Box, JOptionPane
+from burp import (
+    IBurpExtender,
+    IBurpExtenderCallbacks,
+    IHttpListener,
+    IRequestInfo,
+    IParameter,
+    IContextMenuFactory,
+    ITab,
+)
+from javax.swing import (
+    JMenuItem,
+    ProgressMonitor,
+    JPanel,
+    BoxLayout,
+    JLabel,
+    JTextField,
+    JCheckBox,
+    JButton,
+    Box,
+    JOptionPane,
+)
 from java.awt import Dimension
-from elasticsearch_dsl.connections import connections
-from elasticsearch_dsl import Index
-from elasticsearch.helpers import bulk
+from elasticsearch7_dsl.connections import connections
+from elasticsearch7_dsl import Index
+from elasticsearch7.helpers import bulk
 from doc_HttpRequestResponse import DocHTTPRequestResponse
 from datetime import datetime
 from email.utils import parsedate_tz, mktime_tz
+from threading import Thread
 from tzlocal import get_localzone
 import re
 
@@ -36,8 +56,9 @@ reDateHeader = re.compile("^Date:\s*(.*)$", flags=re.IGNORECASE)
 ES_host = "localhost"
 ES_index = "wase-burp"
 Burp_Tools = IBurpExtenderCallbacks.TOOL_PROXY
-Burp_onlyResponses = True       # Usually what you want, responses also contain requests
+Burp_onlyResponses = True  # Usually what you want, responses also contain requests
 #########################################
+
 
 class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
     def registerExtenderCallbacks(self, callbacks):
@@ -49,10 +70,16 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
         self.out = callbacks.getStdout()
 
         self.lastTimestamp = None
-        self.confESHost = self.callbacks.loadExtensionSetting("elasticburp.host") or ES_host
-        self.confESIndex = self.callbacks.loadExtensionSetting("elasticburp.index") or ES_index
-        self.confBurpTools = int(self.callbacks.loadExtensionSetting("elasticburp.tools") or Burp_Tools)
-        saved_onlyresp = self.callbacks.loadExtensionSetting("elasticburp.onlyresp") 
+        self.confESHost = (
+            self.callbacks.loadExtensionSetting("elasticburp.host") or ES_host
+        )
+        self.confESIndex = (
+            self.callbacks.loadExtensionSetting("elasticburp.index") or ES_index
+        )
+        self.confBurpTools = int(
+            self.callbacks.loadExtensionSetting("elasticburp.tools") or Burp_Tools
+        )
+        saved_onlyresp = self.callbacks.loadExtensionSetting("elasticburp.onlyresp")
         if saved_onlyresp == "True":
             self.confBurpOnlyResp = True
         elif saved_onlyresp == "False":
@@ -65,7 +92,9 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
 
     def applyConfig(self):
         try:
-            print("Connecting to '%s', index '%s'" % (self.confESHost, self.confESIndex))
+            print(
+                "Connecting to '%s', index '%s'" % (self.confESHost, self.confESIndex)
+            )
             self.es = connections.create_connection(hosts=[self.confESHost])
             self.idx = Index(self.confESIndex)
             self.idx.document(DocHTTPRequestResponse)
@@ -75,35 +104,76 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
                 self.idx.create()
             self.callbacks.saveExtensionSetting("elasticburp.host", self.confESHost)
             self.callbacks.saveExtensionSetting("elasticburp.index", self.confESIndex)
-            self.callbacks.saveExtensionSetting("elasticburp.tools", str(self.confBurpTools))
-            self.callbacks.saveExtensionSetting("elasticburp.onlyresp", str(int(self.confBurpOnlyResp)))
+            self.callbacks.saveExtensionSetting(
+                "elasticburp.tools", str(self.confBurpTools)
+            )
+            self.callbacks.saveExtensionSetting(
+                "elasticburp.onlyresp", str(int(self.confBurpOnlyResp))
+            )
         except Exception as e:
-            JOptionPane.showMessageDialog(self.panel, "<html><p style='width: 300px'>Error while initializing ElasticSearch: %s</p></html>" % (str(e)), "Error", JOptionPane.ERROR_MESSAGE)
+            JOptionPane.showMessageDialog(
+                self.panel,
+                "<html><p style='width: 300px'>Error while initializing ElasticSearch: %s</p></html>"
+                % (str(e)),
+                "Error",
+                JOptionPane.ERROR_MESSAGE,
+            )
 
     ### ITab ###
     def getTabCaption(self):
         return "ElasticBurp"
 
     def applyConfigUI(self, event):
-        #self.idx.close()
+        # self.idx.close()
         self.confESHost = self.uiESHost.getText()
         self.confESIndex = self.uiESIndex.getText()
-        self.confBurpTools = int((self.uiCBSuite.isSelected() and IBurpExtenderCallbacks.TOOL_SUITE) | (self.uiCBTarget.isSelected() and IBurpExtenderCallbacks.TOOL_TARGET) | (self.uiCBProxy.isSelected() and IBurpExtenderCallbacks.TOOL_PROXY) | (self.uiCBSpider.isSelected() and IBurpExtenderCallbacks.TOOL_SPIDER) | (self.uiCBScanner.isSelected() and IBurpExtenderCallbacks.TOOL_SCANNER) | (self.uiCBIntruder.isSelected() and IBurpExtenderCallbacks.TOOL_INTRUDER) | (self.uiCBRepeater.isSelected() and IBurpExtenderCallbacks.TOOL_REPEATER) | (self.uiCBSequencer.isSelected() and IBurpExtenderCallbacks.TOOL_SEQUENCER) | (self.uiCBExtender.isSelected() and IBurpExtenderCallbacks.TOOL_EXTENDER))
+        self.confBurpTools = int(
+            (self.uiCBSuite.isSelected() and IBurpExtenderCallbacks.TOOL_SUITE)
+            | (self.uiCBTarget.isSelected() and IBurpExtenderCallbacks.TOOL_TARGET)
+            | (self.uiCBProxy.isSelected() and IBurpExtenderCallbacks.TOOL_PROXY)
+            | (self.uiCBSpider.isSelected() and IBurpExtenderCallbacks.TOOL_SPIDER)
+            | (self.uiCBScanner.isSelected() and IBurpExtenderCallbacks.TOOL_SCANNER)
+            | (self.uiCBIntruder.isSelected() and IBurpExtenderCallbacks.TOOL_INTRUDER)
+            | (self.uiCBRepeater.isSelected() and IBurpExtenderCallbacks.TOOL_REPEATER)
+            | (
+                self.uiCBSequencer.isSelected()
+                and IBurpExtenderCallbacks.TOOL_SEQUENCER
+            )
+            | (self.uiCBExtender.isSelected() and IBurpExtenderCallbacks.TOOL_EXTENDER)
+        )
         self.confBurpOnlyResp = self.uiCBOptRespOnly.isSelected()
         self.applyConfig()
 
     def resetConfigUI(self, event):
         self.uiESHost.setText(self.confESHost)
         self.uiESIndex.setText(self.confESIndex)
-        self.uiCBSuite.setSelected(bool(self.confBurpTools & IBurpExtenderCallbacks.TOOL_SUITE))
-        self.uiCBTarget.setSelected(bool(self.confBurpTools & IBurpExtenderCallbacks.TOOL_TARGET))
-        self.uiCBProxy.setSelected(bool(self.confBurpTools & IBurpExtenderCallbacks.TOOL_PROXY))
-        self.uiCBSpider.setSelected(bool(self.confBurpTools & IBurpExtenderCallbacks.TOOL_SPIDER))
-        self.uiCBScanner.setSelected(bool(self.confBurpTools & IBurpExtenderCallbacks.TOOL_SCANNER))
-        self.uiCBIntruder.setSelected(bool(self.confBurpTools & IBurpExtenderCallbacks.TOOL_INTRUDER))
-        self.uiCBRepeater.setSelected(bool(self.confBurpTools & IBurpExtenderCallbacks.TOOL_REPEATER))
-        self.uiCBSequencer.setSelected(bool(self.confBurpTools & IBurpExtenderCallbacks.TOOL_SEQUENCER))
-        self.uiCBExtender.setSelected(bool(self.confBurpTools & IBurpExtenderCallbacks.TOOL_EXTENDER))
+        self.uiCBSuite.setSelected(
+            bool(self.confBurpTools & IBurpExtenderCallbacks.TOOL_SUITE)
+        )
+        self.uiCBTarget.setSelected(
+            bool(self.confBurpTools & IBurpExtenderCallbacks.TOOL_TARGET)
+        )
+        self.uiCBProxy.setSelected(
+            bool(self.confBurpTools & IBurpExtenderCallbacks.TOOL_PROXY)
+        )
+        self.uiCBSpider.setSelected(
+            bool(self.confBurpTools & IBurpExtenderCallbacks.TOOL_SPIDER)
+        )
+        self.uiCBScanner.setSelected(
+            bool(self.confBurpTools & IBurpExtenderCallbacks.TOOL_SCANNER)
+        )
+        self.uiCBIntruder.setSelected(
+            bool(self.confBurpTools & IBurpExtenderCallbacks.TOOL_INTRUDER)
+        )
+        self.uiCBRepeater.setSelected(
+            bool(self.confBurpTools & IBurpExtenderCallbacks.TOOL_REPEATER)
+        )
+        self.uiCBSequencer.setSelected(
+            bool(self.confBurpTools & IBurpExtenderCallbacks.TOOL_SEQUENCER)
+        )
+        self.uiCBExtender.setSelected(
+            bool(self.confBurpTools & IBurpExtenderCallbacks.TOOL_EXTENDER)
+        )
         self.uiCBOptRespOnly.setSelected(self.confBurpOnlyResp)
 
     def getUiComponent(self):
@@ -179,40 +249,66 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
         return self.panel
 
     ### IHttpListener ###
-    def processHttpMessage(self, tool, isRequest, msg):
+    def __processHttpMessage(self, tool, isRequest, msg):
         if not tool & self.confBurpTools or isRequest and self.confBurpOnlyResp:
             return
 
         doc = self.genESDoc(msg)
         doc.save()
 
+    def processHttpMessage(self, tool, isRequest, msg):
+        t = Thread(target=self.__processHttpMessage, args=(tool, isRequest, msg))
+        t.start()
+
     ### IContextMenuFactory ###
     def createMenuItems(self, invocation):
         menuItems = list()
         selectedMsgs = invocation.getSelectedMessages()
         if selectedMsgs != None and len(selectedMsgs) >= 1:
-            menuItems.append(JMenuItem("Add to ElasticSearch Index", actionPerformed=self.genAddToES(selectedMsgs, invocation.getInputEvent().getComponent())))
+            menuItems.append(
+                JMenuItem(
+                    "Add to ElasticSearch Index",
+                    actionPerformed=self.genAddToES(
+                        selectedMsgs, invocation.getInputEvent().getComponent()
+                    ),
+                )
+            )
         return menuItems
 
     def genAddToES(self, msgs, component):
         def menuAddToES(e):
-            progress = ProgressMonitor(component, "Feeding ElasticSearch", "", 0, len(msgs))
+            progress = ProgressMonitor(
+                component, "Feeding ElasticSearch", "", 0, len(msgs)
+            )
             i = 0
             docs = list()
             for msg in msgs:
                 if not Burp_onlyResponses or msg.getResponse():
-                    docs.append(self.genESDoc(msg, timeStampFromResponse=True).to_dict(True))
+                    docs.append(
+                        self.genESDoc(msg, timeStampFromResponse=True).to_dict(True)
+                    )
                 i += 1
                 progress.setProgress(i)
             success, failed = bulk(self.es, docs, True, raise_on_error=False)
             progress.close()
-            JOptionPane.showMessageDialog(self.panel, "<html><p style='width: 300px'>Successful imported %d messages, %d messages failed.</p></html>" % (success, failed), "Finished", JOptionPane.INFORMATION_MESSAGE)
+            JOptionPane.showMessageDialog(
+                self.panel,
+                "<html><p style='width: 300px'>Successful imported %d messages, %d messages failed.</p></html>"
+                % (success, failed),
+                "Finished",
+                JOptionPane.INFORMATION_MESSAGE,
+            )
+
         return menuAddToES
 
     ### Interface to ElasticSearch ###
     def genESDoc(self, msg, timeStampFromResponse=False):
         httpService = msg.getHttpService()
-        doc = DocHTTPRequestResponse(protocol=httpService.getProtocol(), host=httpService.getHost(), port=httpService.getPort())
+        doc = DocHTTPRequestResponse(
+            protocol=httpService.getProtocol(),
+            host=httpService.getHost(),
+            port=httpService.getPort(),
+        )
         doc.meta.index = self.confESIndex
 
         request = msg.getRequest()
@@ -249,7 +345,7 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
                     typename = "json"
                 else:
                     typename = "unknown"
-                
+
                 name = parameter.getName()
                 value = parameter.getValue()
                 doc.add_request_parameter(typename, name, value)
@@ -271,7 +367,9 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
                 doc.request.content_type = "unknown"
 
             bodyOffset = iRequest.getBodyOffset()
-            doc.request.body = request[bodyOffset:].tostring().decode("ascii", "replace")
+            doc.request.body = (
+                request[bodyOffset:].tostring().decode("ascii", "replace")
+            )
 
         if response:
             iResponse = self.helpers.analyzeResponse(response)
@@ -300,17 +398,29 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
                         expiration = str(datetime.fromtimestamp(expCookie.time / 1000))
                     except:
                         pass
-                doc.add_response_cookie(cookie.getName(), cookie.getValue(), cookie.getDomain(), cookie.getPath(), expiration)
+                doc.add_response_cookie(
+                    cookie.getName(),
+                    cookie.getValue(),
+                    cookie.getDomain(),
+                    cookie.getPath(),
+                    expiration,
+                )
 
             bodyOffset = iResponse.getBodyOffset()
-            doc.response.body = response[bodyOffset:].tostring().decode("ascii", "replace")
+            doc.response.body = (
+                response[bodyOffset:].tostring().decode("ascii", "replace")
+            )
 
             if timeStampFromResponse:
                 if dateHeader:
                     try:
-                        doc.timestamp = datetime.fromtimestamp(mktime_tz(parsedate_tz(dateHeader)), tz) # try to use date from response header "Date"
+                        doc.timestamp = datetime.fromtimestamp(
+                            mktime_tz(parsedate_tz(dateHeader)), tz
+                        )  # try to use date from response header "Date"
                         self.lastTimestamp = doc.timestamp
                     except:
-                        doc.timestamp = self.lastTimestamp      # fallback: last stored timestamp. Else: now
+                        doc.timestamp = (
+                            self.lastTimestamp
+                        )  # fallback: last stored timestamp. Else: now
 
         return doc
