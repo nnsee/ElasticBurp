@@ -1,0 +1,3 @@
+elasticsearch7==7.15.1
+elasticsearch7-dsl==7.3.0.post1
+tzlocal==2.1
