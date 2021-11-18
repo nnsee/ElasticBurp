@@ -1,4 +1,5 @@
 import sys
+
 if sys.version_info[0] == 2:
     from HTMLParser import HTMLParser
 else:
@@ -8,14 +9,17 @@ else:
 def add_attrs(attrNames, attrList):
     return [a[1] for a in filter(lambda attr: attr[0] in attrNames, attrList)]
 
+
 def has_attr(attrs, attr):
     return attr in map(lambda kv: kv[0], attrs)
+
 
 def attr_val_is(attrs, attr, val):
     try:
         return filter(lambda kv: kv[0] == attr, attrs)[0][1] == val
     except:
         return False
+
 
 class WASEHTMLParser(HTMLParser, object):
     def reset(self):
@@ -70,14 +74,14 @@ class WASEHTMLParser(HTMLParser, object):
     def close(self):
         self.extrefs = set()
         self.extrefs.update(
-                self.stylesheets,
-                self.frames,
-                self.scripts,
-                self.links,
-                self.images,
-                self.audio,
-                self.video,
-                self.objects,
-                self.formactions
-                )
+            self.stylesheets,
+            self.frames,
+            self.scripts,
+            self.links,
+            self.images,
+            self.audio,
+            self.video,
+            self.objects,
+            self.formactions,
+        )
         return super(WASEHTMLParser, self).close()

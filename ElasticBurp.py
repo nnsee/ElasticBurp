@@ -315,6 +315,7 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
         response = msg.getResponse()
 
         if request:
+            doc.request.full = request.tostring().decode("utf-8", "replace")
             iRequest = self.helpers.analyzeRequest(msg)
             doc.request.method = iRequest.getMethod()
             doc.request.url = iRequest.getUrl().toString()
@@ -368,10 +369,11 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
 
             bodyOffset = iRequest.getBodyOffset()
             doc.request.body = (
-                request[bodyOffset:].tostring().decode("ascii", "replace")
+                request[bodyOffset:].tostring().decode("utf-8", "replace")
             )
 
         if response:
+            doc.response.full = response.tostring().decode("utf-8", "replace")
             iResponse = self.helpers.analyzeResponse(response)
 
             doc.response.status = iResponse.getStatusCode()
@@ -408,7 +410,7 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
 
             bodyOffset = iResponse.getBodyOffset()
             doc.response.body = (
-                response[bodyOffset:].tostring().decode("ascii", "replace")
+                response[bodyOffset:].tostring().decode("utf-8", "replace")
             )
 
             if timeStampFromResponse:
