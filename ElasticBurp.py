@@ -34,7 +34,9 @@ from javax.swing import (
     JButton,
     Box,
     JOptionPane,
+    GroupLayout,
 )
+from javax.swing.border import EmptyBorder
 from java.awt import Dimension
 from elasticsearch7_dsl.connections import connections
 from elasticsearch7_dsl import Index
@@ -44,6 +46,7 @@ from datetime import datetime
 from email.utils import parsedate_tz, mktime_tz
 from threading import Thread
 from tzlocal import get_localzone
+from sys import stdout
 import re
 
 try:
@@ -178,70 +181,113 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
 
     def getUiComponent(self):
         self.panel = JPanel()
+        self.panel.setBorder(EmptyBorder(10, 10, 10, 10))
         self.panel.setLayout(BoxLayout(self.panel, BoxLayout.PAGE_AXIS))
 
-        self.uiESHostLine = JPanel()
-        self.uiESHostLine.setLayout(BoxLayout(self.uiESHostLine, BoxLayout.LINE_AXIS))
-        self.uiESHostLine.setAlignmentX(JPanel.LEFT_ALIGNMENT)
-        self.uiESHostLine.add(JLabel("ElasticSearch Host: "))
-        self.uiESHost = JTextField(40)
+        uiTextBoxPanel = JPanel()
+        uiTextBoxPanel.setAlignmentX(JPanel.LEFT_ALIGNMENT)
+        uiTextBoxLayout = GroupLayout(uiTextBoxPanel)
+        uiTextBoxPanel.setLayout(uiTextBoxLayout)
+        uiTextBoxLayout.setAutoCreateGaps(True)
+        uiTextBoxLayout.setAutoCreateContainerGaps(True)
+        uiEsHostLabel = JLabel("ElasticSearch host: ")
+        self.uiESHost = JTextField(20)
         self.uiESHost.setMaximumSize(self.uiESHost.getPreferredSize())
-        self.uiESHostLine.add(self.uiESHost)
-        self.panel.add(self.uiESHostLine)
-
-        self.uiESIndexLine = JPanel()
-        self.uiESIndexLine.setLayout(BoxLayout(self.uiESIndexLine, BoxLayout.LINE_AXIS))
-        self.uiESIndexLine.setAlignmentX(JPanel.LEFT_ALIGNMENT)
-        self.uiESIndexLine.add(JLabel("ElasticSearch Index: "))
-        self.uiESIndex = JTextField(40)
+        uiEsIndexLabel = JLabel("ElasticSearch index: ")
+        self.uiESIndex = JTextField(20)
         self.uiESIndex.setMaximumSize(self.uiESIndex.getPreferredSize())
-        self.uiESIndexLine.add(self.uiESIndex)
-        self.panel.add(self.uiESIndexLine)
+        uiTextBoxHGroup = uiTextBoxLayout.createSequentialGroup()
+        uiTextBoxHGroup.addGroup(
+            uiTextBoxLayout.createParallelGroup()
+            .addComponent(uiEsHostLabel)
+            .addComponent(uiEsIndexLabel)
+        )
+        uiTextBoxHGroup.addGroup(
+            uiTextBoxLayout.createParallelGroup()
+            .addComponent(self.uiESHost)
+            .addComponent(self.uiESIndex)
+        )
+        uiTextBoxLayout.setHorizontalGroup(uiTextBoxHGroup)
+        uiTextBoxVGroup = uiTextBoxLayout.createSequentialGroup()
+        uiTextBoxVGroup.addGroup(
+            uiTextBoxLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+            .addComponent(uiEsHostLabel)
+            .addComponent(self.uiESHost)
+        )
+        uiTextBoxVGroup.addGroup(
+            uiTextBoxLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+            .addComponent(uiEsIndexLabel)
+            .addComponent(self.uiESIndex)
+        )
+        uiTextBoxLayout.setVerticalGroup(uiTextBoxVGroup)
+        self.panel.add(uiTextBoxPanel)
 
-        uiToolsLine = JPanel()
-        uiToolsLine.setLayout(BoxLayout(uiToolsLine, BoxLayout.LINE_AXIS))
-        uiToolsLine.setAlignmentX(JPanel.LEFT_ALIGNMENT)
         self.uiCBSuite = JCheckBox("Suite")
-        uiToolsLine.add(self.uiCBSuite)
-        uiToolsLine.add(Box.createRigidArea(Dimension(10, 0)))
         self.uiCBTarget = JCheckBox("Target")
-        uiToolsLine.add(self.uiCBTarget)
-        uiToolsLine.add(Box.createRigidArea(Dimension(10, 0)))
         self.uiCBProxy = JCheckBox("Proxy")
-        uiToolsLine.add(self.uiCBProxy)
-        uiToolsLine.add(Box.createRigidArea(Dimension(10, 0)))
         self.uiCBSpider = JCheckBox("Spider")
-        uiToolsLine.add(self.uiCBSpider)
-        uiToolsLine.add(Box.createRigidArea(Dimension(10, 0)))
         self.uiCBScanner = JCheckBox("Scanner")
-        uiToolsLine.add(self.uiCBScanner)
-        uiToolsLine.add(Box.createRigidArea(Dimension(10, 0)))
         self.uiCBIntruder = JCheckBox("Intruder")
-        uiToolsLine.add(self.uiCBIntruder)
-        uiToolsLine.add(Box.createRigidArea(Dimension(10, 0)))
         self.uiCBRepeater = JCheckBox("Repeater")
-        uiToolsLine.add(self.uiCBRepeater)
-        uiToolsLine.add(Box.createRigidArea(Dimension(10, 0)))
         self.uiCBSequencer = JCheckBox("Sequencer")
-        uiToolsLine.add(self.uiCBSequencer)
-        uiToolsLine.add(Box.createRigidArea(Dimension(10, 0)))
         self.uiCBExtender = JCheckBox("Extender")
-        uiToolsLine.add(self.uiCBExtender)
-        self.panel.add(uiToolsLine)
-        self.panel.add(Box.createRigidArea(Dimension(0, 10)))
+
+        uiToolsPanel = JPanel()
+        uiToolsPanel.setAlignmentX(JPanel.LEFT_ALIGNMENT)
+        uiToolsLayout = GroupLayout(uiToolsPanel)
+        uiToolsPanel.setLayout(uiToolsLayout)
+        uiToolsLayout.setAutoCreateGaps(True)
+        uiToolsLayout.setAutoCreateContainerGaps(True)
+        self.uiESHost.setMaximumSize(self.uiESHost.getPreferredSize())
+        self.uiESIndex.setMaximumSize(self.uiESIndex.getPreferredSize())
+        uiToolsHGroup = uiToolsLayout.createSequentialGroup()
+        uiToolsHGroup.addGroup(
+            uiToolsLayout.createParallelGroup()
+            .addComponent(self.uiCBProxy)
+            .addComponent(self.uiCBIntruder)
+        )
+        uiToolsHGroup.addGroup(
+            uiToolsLayout.createParallelGroup()
+            .addComponent(self.uiCBScanner)
+            .addComponent(self.uiCBSequencer)
+        )
+        uiToolsHGroup.addGroup(
+            uiToolsLayout.createParallelGroup()
+            .addComponent(self.uiCBRepeater)
+            .addComponent(self.uiCBExtender)
+        )
+        uiToolsLayout.setHorizontalGroup(uiToolsHGroup)
+        uiToolsVGroup = uiToolsLayout.createSequentialGroup()
+        uiToolsVGroup.addGroup(
+            uiToolsLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+            .addComponent(self.uiCBProxy)
+            .addComponent(self.uiCBScanner)
+            .addComponent(self.uiCBRepeater)
+        )
+        uiToolsVGroup.addGroup(
+            uiToolsLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+            .addComponent(self.uiCBIntruder)
+            .addComponent(self.uiCBSequencer)
+            .addComponent(self.uiCBExtender)
+        )
+        uiToolsLayout.setVerticalGroup(uiToolsVGroup)
+        self.panel.add(uiToolsPanel)
 
         uiOptionsLine = JPanel()
+        uiOptionsLine.setBorder(EmptyBorder(2, 2, 2, 2))
         uiOptionsLine.setLayout(BoxLayout(uiOptionsLine, BoxLayout.LINE_AXIS))
         uiOptionsLine.setAlignmentX(JPanel.LEFT_ALIGNMENT)
-        self.uiCBOptRespOnly = JCheckBox("Process only responses (include requests)")
+        self.uiCBOptRespOnly = JCheckBox("Process only responses (includes requests)")
         uiOptionsLine.add(self.uiCBOptRespOnly)
         self.panel.add(uiOptionsLine)
         self.panel.add(Box.createRigidArea(Dimension(0, 10)))
 
         uiButtonsLine = JPanel()
+        uiButtonsLine.setBorder(EmptyBorder(2, 2, 2, 2))
         uiButtonsLine.setLayout(BoxLayout(uiButtonsLine, BoxLayout.LINE_AXIS))
         uiButtonsLine.setAlignmentX(JPanel.LEFT_ALIGNMENT)
         uiButtonsLine.add(JButton("Apply", actionPerformed=self.applyConfigUI))
+        uiButtonsLine.add(Box.createRigidArea(Dimension(10, 0)))
         uiButtonsLine.add(JButton("Reset", actionPerformed=self.resetConfigUI))
         self.panel.add(uiButtonsLine)
         self.resetConfigUI(None)
