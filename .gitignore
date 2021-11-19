@@ -1,4 +1,6 @@
 *.swp
 *.class
 *.pyc
+*.jar
 .jython_cache
+out
