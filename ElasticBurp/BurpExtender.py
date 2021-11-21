@@ -42,11 +42,10 @@ from elasticsearch7_dsl.connections import connections
 from elasticsearch7_dsl import Index
 from elasticsearch7.helpers import bulk
 from lib.doc_HttpRequestResponse import DocHTTPRequestResponse
+from lib.threadpool import TaskExecutor
 from datetime import datetime
 from email.utils import parsedate_tz, mktime_tz
-from threading import Thread
 from tzlocal import get_localzone
-from sys import stdout
 import re
 
 try:
@@ -67,7 +66,7 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
     def registerExtenderCallbacks(self, callbacks):
         self.callbacks = callbacks
         self.helpers = callbacks.getHelpers()
-        callbacks.setExtensionName("Storing HTTP Requests/Responses into ElasticSearch")
+        callbacks.setExtensionName("ElasticBurp")
         self.callbacks.registerHttpListener(self)
         self.callbacks.registerContextMenuFactory(self)
         self.out = callbacks.getStdout()
@@ -92,6 +91,7 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
 
         self.callbacks.addSuiteTab(self)
         self.applyConfig()
+        self.executor = TaskExecutor(maxThreads=64)
 
     def applyConfig(self):
         try:
@@ -303,8 +303,7 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
         doc.save()
 
     def processHttpMessage(self, tool, isRequest, msg):
-        t = Thread(target=self.__processHttpMessage, args=(tool, isRequest, msg))
-        t.start()
+        self.executor.runBackground(self.__processHttpMessage, tool, isRequest, msg)
 
     ### IContextMenuFactory ###
     def createMenuItems(self, invocation):
