@@ -67,19 +67,17 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
         self.callbacks = callbacks
         self.helpers = callbacks.getHelpers()
         callbacks.setExtensionName("ElasticBurp")
-        self.callbacks.registerHttpListener(self)
-        self.callbacks.registerContextMenuFactory(self)
+        callbacks.registerHttpListener(self)
+        callbacks.registerContextMenuFactory(self)
         self.out = callbacks.getStdout()
 
         self.lastTimestamp = None
-        self.confESHost = (
-            self.callbacks.loadExtensionSetting("elasticburp.host") or ES_host
-        )
+        self.confESHost = callbacks.loadExtensionSetting("elasticburp.host") or ES_host
         self.confESIndex = (
-            self.callbacks.loadExtensionSetting("elasticburp.index") or ES_index
+            callbacks.loadExtensionSetting("elasticburp.index") or ES_index
         )
         self.confBurpTools = int(
-            self.callbacks.loadExtensionSetting("elasticburp.tools") or Burp_Tools
+            callbacks.loadExtensionSetting("elasticburp.tools") or Burp_Tools
         )
         saved_onlyresp = self.callbacks.loadExtensionSetting("elasticburp.onlyresp")
         if saved_onlyresp == "True":
@@ -89,7 +87,7 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
         else:
             self.confBurpOnlyResp = bool(int(saved_onlyresp or Burp_onlyResponses))
 
-        self.callbacks.addSuiteTab(self)
+        callbacks.addSuiteTab(self)
         self.applyConfig()
         self.executor = TaskExecutor(maxThreads=64)
 
