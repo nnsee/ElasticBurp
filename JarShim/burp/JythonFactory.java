@@ -19,7 +19,7 @@ public class JythonFactory
     public Object getJythonObject(String interfaceName, String pathToJythonModule)
     {
         interpreter = new PythonInterpreter();
-        interpreter.exec("from " + pathToJythonModule + " import BurpExtender as ExtenderClass");
+        interpreter.exec("from " + pathToJythonModule + ".BurpExtender import BurpExtender as ExtenderClass");
 
         String instanceName = pathToJythonModule.toLowerCase();
         String objectDef = " = ExtenderClass()";

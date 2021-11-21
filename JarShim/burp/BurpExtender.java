@@ -33,9 +33,9 @@ public class BurpExtender
 
     public void registerExtenderCallbacks(IBurpExtenderCallbacks callbacks)
     {
-        handler.registerExtenderCallbacks(callbacks);
         jf.interpreter.setOut(callbacks.getStdout());
         jf.interpreter.setErr(callbacks.getStderr());
+        handler.registerExtenderCallbacks(callbacks);
     }
 
 }

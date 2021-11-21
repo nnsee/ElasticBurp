@@ -2,6 +2,7 @@
 set -eE
 
 JYTHON_URL="https://repo1.maven.org/maven2/org/python/jython-standalone/2.7.2/jython-standalone-2.7.2.jar"
+PROJECT_NAME="ElasticBurp"
 
 _JYTHON_JAR_PATH_NEEDS_DELETE=0
 _SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
@@ -61,7 +62,7 @@ get_python_packages() {
 
 copy_over_source() {
   echo "Copying over source files..."
-  cp "$_SCRIPT_DIR"/*.py "$_TMP_WORKDIR/Lib"
+  cp -r "$_SCRIPT_DIR/$PROJECT_NAME" "$_TMP_WORKDIR/Lib"
 }
 
 build_java_shim() {
@@ -78,7 +79,7 @@ bundle_jar() (
 
 copy_artifact() {
   _OUT_DIR="$_SCRIPT_DIR/out"
-  _OUT_FILENAME="ElasticBurp-$(date '+%F-%H-%M-%S').jar"
+  _OUT_FILENAME="$PROJECT_NAME-$(date '+%F-%H-%M-%S').jar"
   echo "Copying bundled jar to '$_OUT_DIR/$_OUT_FILENAME'..."
   mkdir -p "$_OUT_DIR" || true
   cp "$_TMP_WORKDIR/build.jar" "$_OUT_DIR/$_OUT_FILENAME"

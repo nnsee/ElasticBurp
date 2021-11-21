@@ -41,7 +41,7 @@ from java.awt import Dimension
 from elasticsearch7_dsl.connections import connections
 from elasticsearch7_dsl import Index
 from elasticsearch7.helpers import bulk
-from doc_HttpRequestResponse import DocHTTPRequestResponse
+from lib.doc_HttpRequestResponse import DocHTTPRequestResponse
 from datetime import datetime
 from email.utils import parsedate_tz, mktime_tz
 from threading import Thread
