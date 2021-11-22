@@ -43,9 +43,11 @@ from elasticsearch7_dsl import Index
 from elasticsearch7.helpers import bulk
 from lib.doc_HttpRequestResponse import DocHTTPRequestResponse
 from lib.threadpool import TaskExecutor
+from lib.utils import get_project_name
 from datetime import datetime
 from email.utils import parsedate_tz, mktime_tz
 from tzlocal import get_localzone
+from time import sleep
 import re
 
 try:
@@ -70,6 +72,8 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
         callbacks.registerHttpListener(self)
         callbacks.registerContextMenuFactory(self)
         self.out = callbacks.getStdout()
+        self.project_title = None
+        self.panel = JPanel()
 
         self.lastTimestamp = None
         self.confESHost = callbacks.loadExtensionSetting("elasticburp.host") or ES_host
@@ -91,13 +95,18 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
         self.applyConfig()
         self.executor = TaskExecutor(maxThreads=64)
 
+    def getIndex(self):
+        if self.project_title is None:
+            sleep(3)  # let's wait for the tab to get added
+            self.project_title = get_project_name(self.panel)
+
+        return "%s-%s" % (self.confESIndex, self.project_title)
+
     def applyConfig(self):
         try:
-            print(
-                "Connecting to '%s', index '%s'" % (self.confESHost, self.confESIndex)
-            )
+            print("Connecting to '%s', index '%s'" % (self.confESHost, self.getIndex()))
             self.es = connections.create_connection(hosts=[self.confESHost])
-            self.idx = Index(self.confESIndex)
+            self.idx = Index(self.getIndex())
             self.idx.document(DocHTTPRequestResponse)
             if self.idx.exists():
                 self.idx.open()
@@ -178,7 +187,6 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
         self.uiCBOptRespOnly.setSelected(self.confBurpOnlyResp)
 
     def getUiComponent(self):
-        self.panel = JPanel()
         self.panel.setBorder(EmptyBorder(10, 10, 10, 10))
         self.panel.setLayout(BoxLayout(self.panel, BoxLayout.PAGE_AXIS))
 
@@ -352,7 +360,7 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
             host=httpService.getHost(),
             port=httpService.getPort(),
         )
-        doc.meta.index = self.confESIndex
+        doc.meta.index = self.getIndex()
 
         request = msg.getRequest()
         response = msg.getResponse()
