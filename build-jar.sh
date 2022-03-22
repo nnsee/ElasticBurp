@@ -85,6 +85,19 @@ copy_artifact() {
   cp "$_TMP_WORKDIR/build.jar" "$_OUT_DIR/$_OUT_FILENAME"
 }
 
+symlink_latest() (
+  # depends on copy_artifact being run
+  _LATEST_PATH="latest.jar"
+  cd "$_OUT_DIR"
+  [ -L "$_LATEST_PATH" ] && rm "$_LATEST_PATH"
+  if [ -e "$_LATEST_PATH" ]; then
+    echo "Unable to create a symbolic link because '$_LATEST_PATH' exists and isn't a symlink!"
+  else
+    ln -s "$_OUT_FILENAME" "$_LATEST_PATH"
+    echo "Created symbolic link: '$_OUT_FILENAME' -> '$_LATEST_PATH'"
+  fi
+)
+
 main() {
   pre_check
   trap cleanup INT ERR EXIT
@@ -95,6 +108,7 @@ main() {
   build_java_shim
   bundle_jar
   copy_artifact
+  symlink_latest
 }
 
 main
