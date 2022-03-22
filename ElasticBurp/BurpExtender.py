@@ -47,7 +47,6 @@ from lib.utils import get_project_name
 from datetime import datetime
 from email.utils import parsedate_tz, mktime_tz
 from tzlocal import get_localzone
-from time import sleep
 import re
 
 try:
@@ -97,7 +96,6 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
 
     def getIndex(self):
         if self.project_title is None:
-            sleep(3)  # let's wait for the tab to get added
             self.project_title = get_project_name(self.panel)
 
         return "%s-%s" % (self.confESIndex, self.project_title)
