@@ -2,12 +2,16 @@ version: '3'
 
 services:
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.1.1
     environment:
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - discovery.type=single-node
+      - xpack.license.self_generated.type=basic
+      - xpack.security.enabled=false
+      - network.host=0.0.0.0
+      - node.name=cluster1-node1
     ulimits:
       memlock:
         soft: -1
@@ -18,7 +22,7 @@ services:
       - data:/usr/share/elasticsearch/data
     restart: unless-stopped
   kibana:
-    image: docker.elastic.co/kibana/kibana:7.14.2
+    image: docker.elastic.co/kibana/kibana:8.1.1
     ports:
       - "5601:5601"
     restart: unless-stopped
