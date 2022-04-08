@@ -119,6 +119,7 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
             self.callbacks.saveExtensionSetting(
                 "elasticburp.onlyresp", str(int(self.confBurpOnlyResp))
             )
+            self.refreshESStatus(None)
         except Exception as e:
             JOptionPane.showMessageDialog(
                 self.panel,
@@ -127,6 +128,12 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
                 "Error",
                 JOptionPane.ERROR_MESSAGE,
             )
+
+    def refreshESStatus(self, event):
+        status = self.es.cat.allocation(v=True)
+        status += "\n\n"
+        status += self.es.cat.indices(v=True, index=("%s*" % self.confESIndex), h=["index", "docs.count", "store.size"])
+        self.uiESStatusPanel.setMessage(status.encode("utf-8"), False)
 
     ### ITab ###
     def getTabCaption(self):
@@ -253,8 +260,6 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
         uiToolsPanel.setLayout(uiToolsLayout)
         uiToolsLayout.setAutoCreateGaps(True)
         uiToolsLayout.setAutoCreateContainerGaps(True)
-        self.uiESHost.setMaximumSize(self.uiESHost.getPreferredSize())
-        self.uiESIndex.setMaximumSize(self.uiESIndex.getPreferredSize())
         uiToolsHGroup = uiToolsLayout.createSequentialGroup()
         uiToolsHGroup.addGroup(
             uiToolsLayout.createParallelGroup()
@@ -305,6 +310,25 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
         uiButtonsLine.add(Box.createRigidArea(Dimension(10, 0)))
         uiButtonsLine.add(JButton("Reset", actionPerformed=self.resetConfigUI))
         self.panel.add(uiButtonsLine)
+        self.panel.add(Box.createRigidArea(Dimension(0, 20)))
+
+        uiStatusPanel = JPanel()
+        uiStatusPanel.setAlignmentX(JPanel.LEFT_ALIGNMENT)
+        uiStatusLayout = BoxLayout(uiStatusPanel, BoxLayout.PAGE_AXIS)
+        uiStatusPanel.setLayout(uiStatusLayout)
+        uiStatusPanel.setBorder(EmptyBorder(2, 2, 2, 2))
+        self.uiESStatusPanel = self.callbacks.createMessageEditor(None, False)
+        uiStatusPanelHeader = JPanel()
+        uiStatusPanelHeader.setBorder(EmptyBorder(2, 2, 2, 2))
+        uiStatusPanelHeader.setLayout(BoxLayout(uiStatusPanelHeader, BoxLayout.LINE_AXIS))
+        uiStatusPanelHeader.setAlignmentX(JPanel.LEFT_ALIGNMENT)
+        uiStatusPanelHeader.add(JLabel("ElasticSearch status"))
+        uiStatusPanelHeader.add(Box.createRigidArea(Dimension(10, 0)))
+        uiStatusPanelHeader.add(JButton("Refresh", actionPerformed=self.refreshESStatus))
+        uiStatusPanel.add(uiStatusPanelHeader)
+        uiStatusPanel.add(self.uiESStatusPanel.getComponent().getComponents()[0].getComponents()[1])
+        self.panel.add(uiStatusPanel)
+
         self.resetConfigUI(None)
 
         return self.panel
