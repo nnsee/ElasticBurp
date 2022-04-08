@@ -102,6 +102,7 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
 
     def applyConfig(self):
         try:
+            self.setCurrentIndexLabel()
             print("Connecting to '%s', index '%s'" % (self.confESHost, self.getIndex()))
             self.es = connections.create_connection(hosts=[self.confESHost])
             self.idx = Index(self.getIndex())
@@ -130,6 +131,10 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
     ### ITab ###
     def getTabCaption(self):
         return "ElasticBurp"
+
+    def setCurrentIndexLabel(self):
+        self.uiEsCurrentIndexLabel.setText("Current index: %s" % self.getIndex())
+        return
 
     def applyConfigUI(self, event):
         # self.idx.close()
@@ -197,9 +202,10 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
         uiEsHostLabel = JLabel("ElasticSearch host: ")
         self.uiESHost = JTextField(20)
         self.uiESHost.setMaximumSize(self.uiESHost.getPreferredSize())
-        uiEsIndexLabel = JLabel("ElasticSearch index: ")
+        uiEsIndexLabel = JLabel("Index prefix: ")
         self.uiESIndex = JTextField(20)
         self.uiESIndex.setMaximumSize(self.uiESIndex.getPreferredSize())
+        self.uiEsCurrentIndexLabel = JLabel("Current index: ")
         uiTextBoxHGroup = uiTextBoxLayout.createSequentialGroup()
         uiTextBoxHGroup.addGroup(
             uiTextBoxLayout.createParallelGroup()
@@ -210,6 +216,7 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
             uiTextBoxLayout.createParallelGroup()
             .addComponent(self.uiESHost)
             .addComponent(self.uiESIndex)
+            .addComponent(self.uiEsCurrentIndexLabel)
         )
         uiTextBoxLayout.setHorizontalGroup(uiTextBoxHGroup)
         uiTextBoxVGroup = uiTextBoxLayout.createSequentialGroup()
@@ -222,6 +229,10 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
             uiTextBoxLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
             .addComponent(uiEsIndexLabel)
             .addComponent(self.uiESIndex)
+        )
+        uiTextBoxVGroup.addGroup(
+            uiTextBoxLayout.createParallelGroup(GroupLayout.Alignment.BASELINE)
+            .addComponent(self.uiEsCurrentIndexLabel)
         )
         uiTextBoxLayout.setVerticalGroup(uiTextBoxVGroup)
         self.panel.add(uiTextBoxPanel)
