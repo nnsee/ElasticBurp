@@ -98,36 +98,34 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
         if self.project_title is None:
             self.project_title = get_project_name(self.panel)
 
-        return "%s-%s" % (self.confESIndex, self.project_title)
+        index = "%s-%s" % (self.confESIndex, self.project_title)
+
+        # remove illegal characters
+        index = index.replace(" ", "-")
+        index = str.translate(str(index), None, ':"*+/\\|?#><()')
+        index = index.lstrip("-_")
+
+        return index.lower()
 
     def applyConfig(self):
-        try:
-            self.setCurrentIndexLabel()
-            print("Connecting to '%s', index '%s'" % (self.confESHost, self.getIndex()))
-            self.es = connections.create_connection(hosts=[self.confESHost])
-            self.idx = Index(self.getIndex())
-            self.idx.document(DocHTTPRequestResponse)
-            if self.idx.exists():
-                self.idx.open()
-            else:
-                self.idx.create()
-            self.callbacks.saveExtensionSetting("elasticburp.host", self.confESHost)
-            self.callbacks.saveExtensionSetting("elasticburp.index", self.confESIndex)
-            self.callbacks.saveExtensionSetting(
-                "elasticburp.tools", str(self.confBurpTools)
-            )
-            self.callbacks.saveExtensionSetting(
-                "elasticburp.onlyresp", str(int(self.confBurpOnlyResp))
-            )
-            self.refreshESStatus(None)
-        except Exception as e:
-            JOptionPane.showMessageDialog(
-                self.panel,
-                "<html><p style='width: 300px'>Error while initializing ElasticSearch: %s</p></html>"
-                % (str(e)),
-                "Error",
-                JOptionPane.ERROR_MESSAGE,
-            )
+        self.setCurrentIndexLabel()
+        print("Connecting to '%s', index '%s'" % (self.confESHost, self.getIndex()))
+        self.es = connections.create_connection(hosts=[self.confESHost])
+        self.idx = Index(self.getIndex())
+        self.idx.document(DocHTTPRequestResponse)
+        if self.idx.exists():
+            self.idx.open()
+        else:
+            self.idx.create()
+        self.callbacks.saveExtensionSetting("elasticburp.host", self.confESHost)
+        self.callbacks.saveExtensionSetting("elasticburp.index", self.confESIndex)
+        self.callbacks.saveExtensionSetting(
+            "elasticburp.tools", str(self.confBurpTools)
+        )
+        self.callbacks.saveExtensionSetting(
+            "elasticburp.onlyresp", str(int(self.confBurpOnlyResp))
+        )
+        self.refreshESStatus(None)
 
     def refreshESStatus(self, event):
         status = self.es.cat.allocation(v=True)
@@ -326,7 +324,7 @@ class BurpExtender(IBurpExtender, IHttpListener, IContextMenuFactory, ITab):
         uiStatusPanelHeader.add(Box.createRigidArea(Dimension(10, 0)))
         uiStatusPanelHeader.add(JButton("Refresh", actionPerformed=self.refreshESStatus))
         uiStatusPanel.add(uiStatusPanelHeader)
-        uiStatusPanel.add(self.uiESStatusPanel.getComponent().getComponents()[0].getComponents()[1])
+        uiStatusPanel.add(self.uiESStatusPanel.getComponent())
         self.panel.add(uiStatusPanel)
 
         self.resetConfigUI(None)
