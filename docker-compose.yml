@@ -12,20 +12,23 @@ services:
       - xpack.security.enabled=false
       - network.host=0.0.0.0
       - node.name=cluster1-node1
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
     ports:
-      - "9200:9200"
+      - "127.0.0.1:9200:9200"
     volumes:
       - data:/usr/share/elasticsearch/data
     restart: unless-stopped
+    networks:
+      - elastic
   kibana:
     image: docker.elastic.co/kibana/kibana:8.1.1
     ports:
-      - "5601:5601"
+      - "127.0.0.1:5601:5601"
     restart: unless-stopped
+    networks:
+      - elastic
 
 volumes:
   data:
+
+networks:
+  elastic:
