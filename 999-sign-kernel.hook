@@ -2,7 +2,7 @@
 Operation = Install
 Operation = Upgrade
 Type = Package
-Target = linux
+Target = linux*
 [Action]
 Description = Creating and signing unified EFI executable...
 Depends = binutils

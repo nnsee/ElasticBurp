@@ -7,12 +7,12 @@ This script (`create-unified-kernel.sh`) combines the Linux kernel and initrd im
 **The script makes a number of assumptions about the system.** Notably:
 
 * The system is based on Arch Linux
-* The system has boot parameters in `/boot/cmdline.txt` (minimal example provided in this repo - modify to your needs)
+* The system has boot parameters in `/etc/cmdline` (minimal example provided in this repo - modify to your needs)
 * The system has [secure boot keys in `/etc/secureboot`](https://wiki.archlinux.org/title/Unified_Extensible_Firmware_Interface/Secure_Boot#Enrolling_keys_in_firmware)
 * The system has the `sbsigntools` and `binutils` packages installed
 * The system is using the stock kernel (kernel in `/boot/vmlinuz-linux` and initramfs in `/boot/initramfs-linux.img`)
 
-Fortunately, the script is minimal - it's easy to understand and modify to your specific scenario.
+Fortunately, the script is minimal - it's easy to understand and modify to your specific scenario. Specifically, the `VARIANT` variable defined at the top of the script is probably of most interest to you - this can be used to specify custom kernel builds, a la `VARIANT="-zen"`.
 
 You'll also need to actually use `efibootmgr` or similar to create the EFI boot entry. Something like so:
 ```sh
