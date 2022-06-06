@@ -3,6 +3,14 @@ Operation = Install
 Operation = Upgrade
 Type = Package
 Target = linux*
+
+[Trigger]
+Type = Path
+Operation = Install
+Operation = Upgrade
+Target = usr/lib/modules/*/vmlinuz
+Target = usr/lib/initcpio/*
+
 [Action]
 Description = Creating and signing unified EFI executable...
 Depends = binutils
